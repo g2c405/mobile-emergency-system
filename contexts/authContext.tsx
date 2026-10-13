@@ -78,6 +78,9 @@ export function AuthProvider({children}: AuthProviderProps){
             setLoading(false);
         }
     }
+    function updateUser(user: User) {
+        setUser(user);
+    }
     return(
         <AuthContext.Provider value={{
             user,
@@ -87,6 +90,7 @@ export function AuthProvider({children}: AuthProviderProps){
             login,
             register,
             logout,
+            updateUser,
         }}>{children}</AuthContext.Provider>
     )
 }

@@ -3,6 +3,7 @@ import AuthInput from "@/components/ui/auth/authInput";
 import { changePassword } from "@/services/authService";
 import { ChangePasswordRequest } from "@/types/auth";
 import { Ionicons } from "@expo/vector-icons";
+import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
@@ -32,6 +33,8 @@ export default function ChangePasswordScreen() {
     const [changePasswordError, setChangePasswordError] =
         useState<string | null>(null);
 
+    const queryClient = useQueryClient();
+
     const {
         control,
         handleSubmit,
@@ -60,6 +63,11 @@ export default function ChangePasswordScreen() {
                     data.current_password,
                 new_password:
                     data.new_password,
+            });
+
+            // Refresh notifications after the password change succeeds.
+            await queryClient.invalidateQueries({
+                queryKey: ["notifications"],
             });
 
             router.back();

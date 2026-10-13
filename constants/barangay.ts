@@ -1,134 +1,35 @@
 export const BARANGAYS = [
-    {
-        label: "Agapito del Rosario",
-        value: "Agapito del Rosario",
-    },
-    {
-        label: "Amsic",
-        value: "Amsic",
-    },
-    {
-        label: "Anunas",
-        value: "Anunas",
-    },
-    {
-        label: "Balibago",
-        value: "Balibago",
-    },
-    {
-        label: "Capaya",
-        value: "Capaya",
-    },
-    {
-        label: "Claro M. Recto",
-        value: "Claro M. Recto",
-    },
-    {
-        label: "Cuayan",
-        value: "Cuayan",
-    },
-    {
-        label: "Cutcut",
-        value: "Cutcut",
-    },
-    {
-        label: "Cutud",
-        value: "Cutud",
-    },
-    {
-        label: "Lourdes NorthWest",
-        value: "Lourdes NorthWest",
-    },
-    {
-        label: "Lourdes Sur",
-        value: "Lourdes Sur",
-    },
-    {
-        label: "Lourdes Sur East",
-        value: "Lourdes Sur East",
-    },
-    {
-        label: "Malabañas",
-        value: "Malabañas",
-    },
-    {
-        label: "Margot",
-        value: "Margot",
-    },
-    {
-        label: "Marisol (Ninoy Aquino)",
-        value: "Marisol (Ninoy Aquino)",
-    },
-    {
-        label: "Mining",
-        value: "Mining",
-    },
-    {
-        label: "Pampang (Santo Niño)",
-        value: "Pampang (Santo Niño)",
-    },
-    {
-        label: "Pandan",
-        value: "Pandan",
-    },
-    {
-        label: "Pulung Bulu",
-        value: "Pulung Bulu",
-    },
-    {
-        label: "Pulung Cacutud",
-        value: "Pulung Cacutud",
-    },
-    {
-        label: "Pulung Maragul",
-        value: "Pulung Maragul",
-    },
-    {
-        label: "Salapungan",
-        value: "Salapungan",
-    },
-    {
-        label: "San José",
-        value: "San José",
-    },
-    {
-        label: "San Nicolas",
-        value: "San Nicolas",
-    },
-    {
-        label: "Santa Teresita",
-        value: "Santa Teresita",
-    },
-    {
-        label: "Santa Trinidad",
-        value: "Santa Trinidad",
-    },
-    {
-        label: "Santo Cristo",
-        value: "Santo Cristo",
-    },
-    {
-        label: "Santo Domingo",
-        value: "Santo Domingo",
-    },
-    {
-        label: "Santo Rosario (Población)",
-        value: "Santo Rosario (Población)",
-    },
-    {
-        label: "Sapalibutad",
-        value: "Sapalibutad",
-    },
-    {
-        label: "Sapangbato",
-        value: "Sapangbato",
-    },
-    {
-        label: "Tabun",
-        value: "Tabun",
-    },
-    {
-        label: "Virgen Delos Remedios",
-        value: "Virgen Delos Remedios",
-    },
+    { label: "Agapito del Rosario", value: "Agapito del Rosario" },
+    { label: "Amsic", value: "Amsic" },
+    { label: "Anunas", value: "Anunas" },
+    { label: "Balibago", value: "Balibago" },
+    { label: "Capaya", value: "Capaya" },
+    { label: "Claro M. Recto", value: "Claro M. Recto" },
+    { label: "Cuayan", value: "Cuayan" },
+    { label: "Cutcut", value: "Cutcut" },
+    { label: "Cutud", value: "Cutud" },
+    { label: "Lourdes NorthWest", value: "Lourdes NorthWest" },
+    { label: "Lourdes Sur", value: "Lourdes Sur" },
+    { label: "Lourdes Sur East", value: "Lourdes Sur East" },
+    { label: "Malabañas", value: "Malabañas" },
+    { label: "Margot", value: "Margot" },
+    { label: "Marisol", value: "Marisol" },
+    { label: "Mining", value: "Mining" },
+    { label: "Pampang", value: "Pampang" },
+    { label: "Pandan", value: "Pandan" },
+    { label: "Pulung Bulu", value: "Pulung Bulu" },
+    { label: "Pulung Cacutud", value: "Pulung Cacutud" },
+    { label: "Pulung Maragul", value: "Pulung Maragul" },
+    { label: "Salapungan", value: "Salapungan" },
+    { label: "San José", value: "San José" },
+    { label: "San Nicolas", value: "San Nicolas" },
+    { label: "Santa Teresita", value: "Santa Teresita" },
+    { label: "Santa Trinidad", value: "Santa Trinidad" },
+    { label: "Santo Cristo", value: "Santo Cristo" },
+    { label: "Santo Domingo", value: "Santo Domingo" },
+    { label: "Santo Rosario", value: "Santo Rosario" },
+    { label: "Sapalibutad", value: "Sapalibutad" },
+    { label: "Sapangbato", value: "Sapangbato" },
+    { label: "Tabun", value: "Tabun" },
+    { label: "Virgen Delos Remedios", value: "Virgen Delos Remedios" },
 ];

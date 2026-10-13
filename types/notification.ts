@@ -7,6 +7,7 @@ export interface Notification {
     id: number;
     notification_type: NotificationType;
     report: number | null;
+    announcement: number | null;
     title: string;
     message: string;
     is_read: boolean;

@@ -1,3 +1,4 @@
+import LegalLinks from "@/components/legal/legalLinks";
 import AuthButton from "@/components/ui/auth/authButton";
 import AuthInput from "@/components/ui/auth/authInput";
 import { useAuth } from "@/hooks/useAuth";
@@ -6,28 +7,37 @@ import { LoginRequest } from "@/types/auth";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+    Image,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-export default function LoginScreen(){
+
+export default function LoginScreen() {
     const [loginError, setLoginError] = useState<string | null>(null);
-    const {loading, login} = useAuth();
+    const { loading, login } = useAuth();
+
     const {
         control,
         handleSubmit,
-        formState: { errors }
+        formState: { errors },
     } = useForm<LoginRequest>();
-    
-    async function handleLogin(data: LoginRequest){
-        try{
+
+    async function handleLogin(data: LoginRequest) {
+        setLoginError(null);
+
+        try {
             await login(data);
-        }
-       catch(error: any) {
+        } catch (error: any) {
             handleApiError(error);
 
             if (error.response?.status === 403) {
                 setLoginError(
                     error.response.data?.detail ||
-                    "Please verify your email before logging in."
+                        "Please verify your email before logging in."
                 );
                 return;
             }
@@ -35,7 +45,7 @@ export default function LoginScreen(){
             if (error.response?.status === 401) {
                 setLoginError(
                     error.response.data?.detail ||
-                    "Invalid username or password."
+                        "Invalid username or password."
                 );
                 return;
             }
@@ -44,10 +54,9 @@ export default function LoginScreen(){
             console.error("DATA:", error.response?.data);
             console.error("MESSAGE:", error.message);
         }
-        
     }
 
-    return(
+    return (
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.container}>
                 <Image
@@ -55,13 +64,19 @@ export default function LoginScreen(){
                     style={styles.logo}
                     resizeMode="contain"
                 />
-                <Text style={styles.heading}>Sign in to your Account</Text>
+
+                <Text style={styles.heading}>
+                    Sign in to your Account
+                </Text>
+
                 <View style={styles.form}>
                     <Controller
                         control={control}
                         name="username"
-                        rules={{required:"Username is required"}}
-                        render={({field: {onChange, onBlur, value}})=> (
+                        rules={{
+                            required: "Username is required",
+                        }}
+                        render={({ field: { onChange, onBlur, value } }) => (
                             <AuthInput
                                 placeholder="Username"
                                 value={value}
@@ -73,10 +88,13 @@ export default function LoginScreen(){
                             />
                         )}
                     />
+
                     <Controller
                         control={control}
                         name="password"
-                        rules={{required: "Password is required",}}
+                        rules={{
+                            required: "Password is required",
+                        }}
                         render={({ field: { onChange, onBlur, value } }) => (
                             <AuthInput
                                 placeholder="Password"
@@ -88,22 +106,48 @@ export default function LoginScreen(){
                             />
                         )}
                     />
-                    {loginError && (<Text style={styles.loginError}>{loginError}</Text>)}
+
+                    <Pressable
+                        style={styles.forgotPassword}
+                        onPress={() =>
+                            router.push("/(auth)/forgot-password")
+                        }
+                    >
+                        <Text style={styles.accentText}>
+                            Forgot Password?
+                        </Text>
+                    </Pressable>
+
+                    {loginError && (
+                        <Text style={styles.loginError}>
+                            {loginError}
+                        </Text>
+                    )}
                 </View>
-                
+
                 <Pressable
                     style={styles.accountLink}
-                    onPress={() => router.push("/(auth)/register")}>
+                    onPress={() => router.push("/(auth)/register")}
+                >
                     <Text style={styles.accountText}>
                         Don't have an account?{" "}
                         <Text style={styles.accentText}>
                             Sign up here.
                         </Text>
                     </Text>
-                
                 </Pressable>
-                <AuthButton title="Sign in" loading={loading} onPress={handleSubmit(handleLogin)}/>
-            </View>    
+
+                <AuthButton
+                    title="Sign in"
+                    loading={loading}
+                    onPress={handleSubmit(handleLogin)}
+                />
+
+                <LegalLinks
+                    layout="row"
+                    containerStyle={styles.legalLinks}
+                />
+            </View>
         </SafeAreaView>
     );
 }
@@ -111,12 +155,20 @@ export default function LoginScreen(){
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
+        backgroundColor: "#F8F8F8",
     },
 
     container: {
         flex: 1,
         paddingHorizontal: 28,
         paddingTop: 40,
+    },
+
+    logo: {
+        width: 150,
+        height: 150,
+        alignSelf: "center",
+        marginBottom: 20,
     },
 
     heading: {
@@ -130,6 +182,11 @@ const styles = StyleSheet.create({
     form: {
         width: "100%",
         gap: 16,
+    },
+
+    forgotPassword: {
+        alignSelf: "flex-end",
+        marginTop: -6,
     },
 
     accountLink: {
@@ -149,16 +206,15 @@ const styles = StyleSheet.create({
         color: "#C62828",
         fontWeight: "600",
     },
+
     loginError: {
         color: "#C62828",
         fontSize: 13,
         textAlign: "center",
         marginTop: -4,
     },
-    logo: {
-        width: 150,
-        height: 150,
-        alignSelf: "center",
-        marginBottom: 20,
+
+    legalLinks: {
+        marginTop: 18,
     },
 });

@@ -1,3 +1,4 @@
+
 import {
     ActivityIndicator,
     Pressable,
@@ -17,20 +18,29 @@ export default function AuthButton({
     disabled,
     ...props
 }: AuthButtonProps) {
+    const isDisabled = disabled || loading;
+
     return (
         <Pressable
             style={({ pressed }) => [
                 styles.button,
-                pressed && styles.buttonPressed,
-                loading && styles.buttonDisabled,
+                pressed && !isDisabled && styles.buttonPressed,
+                isDisabled && styles.buttonDisabled,
             ]}
-            disabled={disabled || loading}
+            disabled={isDisabled}
             {...props}
         >
             {loading ? (
                 <ActivityIndicator color="#FFFFFF" />
             ) : (
-                <Text style={styles.text}>{title}</Text>
+                <Text
+                    style={[
+                        styles.text,
+                        isDisabled && styles.textDisabled,
+                    ]}
+                >
+                    {title}
+                </Text>
             )}
         </Pressable>
     );
@@ -50,12 +60,16 @@ const styles = StyleSheet.create({
     },
 
     buttonDisabled: {
-        opacity: 0.6,
+        backgroundColor: "#BDBDBD",
     },
 
     text: {
         color: "#FFFFFF",
         fontSize: 16,
         fontWeight: "700",
+    },
+
+    textDisabled: {
+        color: "#F5F5F5",
     },
 });

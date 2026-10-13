@@ -1,27 +1,50 @@
+import LegalLinks from "@/components/legal/legalLinks";
 import ProfileInfoRow from "@/components/ui/profile/profileInfoRow";
 import { useAuth } from "@/hooks/useAuth";
+import { me } from "@/services/authService";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { useState } from "react";
 import {
     Pressable,
+    RefreshControl,
     ScrollView,
     StyleSheet,
     Text,
-    View
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 export default function ProfileScreen() {
-    const { user, logout, loading } = useAuth();
-
+    const { user, logout, loading, updateUser } = useAuth();
+    const [refreshing, setRefreshing] = useState(false);
     if (!user) {
         return null;
     }
+
+    async function handleRefresh() {
+    setRefreshing(true);
+
+    try {
+        const updatedUser = await me();
+        updateUser(updatedUser);
+    } catch (error) {
+        console.error("Failed to refresh profile:", error);
+    } finally {
+        setRefreshing(false);
+    }
+}
 
     return (
         <SafeAreaView style={styles.safeArea}>
             <ScrollView
                 contentContainerStyle={styles.container}
                 showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={handleRefresh}
+                    />
+                }
             >
                <View style={styles.header}>
                     <Text style={styles.heading}>
@@ -113,6 +136,59 @@ export default function ProfileScreen() {
                     <Text style={styles.sectionTitle}>
                         Actions
                     </Text>
+                    
+                    <Pressable
+                        style={({ pressed }) => [
+                            styles.actionRow,
+                            pressed && styles.actionPressed,
+                        ]}
+                        onPress={() => {
+                            router.push("/changeContactNumber");
+                        }}
+                    >
+                        <View style={styles.actionLeft}>
+                            <Ionicons
+                                name="call-outline"
+                                size={20}
+                                color="#555555"
+                            />
+                            <Text style={styles.actionText}>Change contact number</Text>
+                        </View>
+
+                        <Ionicons
+                            name="chevron-forward"
+                            size={20}
+                            color="#AAAAAA"
+                        />
+                    </Pressable>
+
+                    <Pressable
+                        style={({ pressed }) => [
+                            styles.actionRow,
+                            pressed && styles.actionPressed,
+                        ]}
+                        onPress={() => {
+                            router.push("/changeEmail");
+                        }}
+                    >
+                        <View style={styles.actionLeft}>
+                            <Ionicons
+                                name="mail-outline"
+                                size={20}
+                                color="#555555"
+                            />
+
+                            <Text style={styles.actionText}>
+                                Change email
+                            </Text>
+                        </View>
+
+                        <Ionicons
+                            name="chevron-forward"
+                            size={20}
+                            color="#AAAAAA"
+                        />
+                    </Pressable>
 
                     <Pressable
                         style={({ pressed }) => [
@@ -165,6 +241,10 @@ export default function ProfileScreen() {
                             </Text>
                         </View>
                     </Pressable>
+                </View>
+                {/* Legal Documents */}
+                <View style={styles.legalSection}>
+                    <LegalLinks layout="column" />
                 </View>
             </ScrollView>
         </SafeAreaView>
@@ -300,5 +380,10 @@ const styles = StyleSheet.create({
         fontSize: 28,
         fontWeight: "700",
         color: "#222222",
+    },
+    legalSection: {
+        marginTop: 4,
+        marginBottom: 12,
+        paddingHorizontal: 4,
     },
 });

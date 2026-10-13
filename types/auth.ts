@@ -31,6 +31,7 @@ export interface AuthContextType{
     login: (data: LoginRequest)=> Promise<void>;
     register: (data: RegisterRequest)=> Promise<void>;
     logout: ()=> Promise<void>;
+    updateUser: (user: User) => void;
 }
 
 export interface AuthProviderProps{
@@ -40,4 +41,12 @@ export interface AuthProviderProps{
 export interface ChangePasswordRequest {
     current_password: string;
     new_password: string;
+}
+
+export interface ChangeEmailRequest {
+    new_email: string;
+}
+
+export interface ChangeContactNumberRequest {
+    contact_number: string;
 }

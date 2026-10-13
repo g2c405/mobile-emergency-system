@@ -63,7 +63,13 @@ export default function NotificationsScreen() {
                 }
                 break;
 
-            case "admin_announcement":
+           case "admin_announcement":
+            if (notification.announcement) {
+                router.push(
+                    `/announcement/${notification.announcement}`
+                );
+            }
+            break;
             case "user_warning":
                 router.push(`/notification/${notification.id}`);
                 break;

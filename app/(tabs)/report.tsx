@@ -544,21 +544,11 @@ export default function ReportScreen() {
     }
 
     async function processSubmit() {
-        if (!mediaUri || !mediaType) {
-            Alert.alert(
-                "Media required",
-                "Please take a photo or record a video before submitting."
-            );
-
-            return;
-        }
-
         if (!location) {
             Alert.alert(
                 "Location required",
                 "Please get your current location before submitting."
             );
-
             return;
         }
 
@@ -567,7 +557,6 @@ export default function ReportScreen() {
                 "Barangay required",
                 "Please select a barangay."
             );
-
             return;
         }
 
@@ -576,70 +565,82 @@ export default function ReportScreen() {
                 "Missing description",
                 "Please describe the accident."
             );
-
             return;
         }
 
         try {
             setLoading(true);
 
-            const report =
-                await createReport({
-                    latitude:
-                        location.latitude,
-                    longitude:
-                        location.longitude,
-                    barangay,
-                    description:
-                        description.trim(),
-                });
+            // Create the report first.
+            // Media is optional.
+            const report = await createReport({
+                latitude: location.latitude,
+                longitude: location.longitude,
+                barangay,
+                description: description.trim(),
+            });
 
-            if (!mediaMimeType) {
-                Alert.alert(
-                    "Media error",
-                    "Unable to determine the media type."
-                );
+            let mediaUploadFailed = false;
+            let gallerySaveFailed = false;
 
-                return;
-            }
+            // Media upload is optional.
+            // If it fails, the report itself should still succeed.
+            if (mediaUri && mediaType) {
+                try {
+                    if (!mediaMimeType) {
+                        throw new Error("Unable to determine media type.");
+                    }
 
-            const mediaPath =
-                await uploadMedia(
-                    mediaUri,
-                    mediaType,
-                    report.id,
-                    "media",
-                    mediaMimeType
-                );
-
-            let thumbnailPath:
-                | string
-                | undefined;
-
-            if (mediaType === "video") {
-                const thumbnailUri =
-                    await generateVideoThumbnail(
-                        mediaUri
-                    );
-
-                thumbnailPath =
-                    await uploadMedia(
-                        thumbnailUri,
-                        "image",
+                    const mediaPath = await uploadMedia(
+                        mediaUri,
+                        mediaType,
                         report.id,
-                        "thumbnail",
-                        "image/jpeg"
+                        "media",
+                        mediaMimeType
                     );
+
+                    let thumbnailPath: string | undefined;
+
+                    if (mediaType === "video") {
+                        const thumbnailUri =
+                            await generateVideoThumbnail(mediaUri);
+
+                        thumbnailPath = await uploadMedia(
+                            thumbnailUri,
+                            "image",
+                            report.id,
+                            "thumbnail",
+                            "image/jpeg"
+                        );
+                    }
+
+                    await updateReportMedia(
+                        report.id,
+                        mediaPath,
+                        thumbnailPath
+                    );
+                } catch (error) {
+                    console.error("MEDIA UPLOAD ERROR:", error);
+                    mediaUploadFailed = true;
+                }
             }
 
-            await updateReportMedia(
-                report.id,
-                mediaPath,
-                thumbnailPath
-            );
+            // Saving to the user's gallery is also non-fatal.
+            if (
+                saveToGallery &&
+                mediaSource === "camera" &&
+                mediaUri
+            ) {
+                try {
+                    await saveMediaToGallery(mediaUri);
+                } catch (error) {
+                    console.error("SAVE TO GALLERY ERROR:", error);
+                    gallerySaveFailed = true;
+                }
+            }
 
-            // The report and its notification now exist on the backend.
-            // Mark both queries as stale so their active screens refetch.
+            // Refresh report/notification data regardless of whether
+            // optional media processing succeeded.
             await queryClient.invalidateQueries({
                 queryKey: ["reports"],
             });
@@ -648,33 +649,25 @@ export default function ReportScreen() {
                 queryKey: ["notifications"],
             });
 
-            if (
-                saveToGallery &&
-                mediaSource === "camera" &&
-                mediaUri
-            ) {
-                try {
-                    await saveMediaToGallery(
-                        mediaUri
-                    );
-                } catch (error) {
-                    console.error(
-                        "SAVE TO GALLERY ERROR:",
-                        error
-                    );
+            let successMessage =
+                "Your accident report has been submitted successfully.";
 
-                    Alert.alert(
-                        "Report submitted",
-                        "Your report was submitted successfully, but the media could not be saved to your gallery."
-                    );
+            if (!mediaUri) {
+                successMessage +=
+                    " No media was attached.";
+            } else if (mediaUploadFailed) {
+                successMessage +=
+                    " However, the media could not be attached.";
+            }
 
-                    return;
-                }
+            if (gallerySaveFailed) {
+                successMessage +=
+                    " The media could not be saved to your gallery.";
             }
 
             Alert.alert(
                 "Report submitted",
-                "Your accident report has been submitted.",
+                successMessage,
                 [
                     {
                         text: "OK",
@@ -696,9 +689,7 @@ export default function ReportScreen() {
             setMediaMimeType(null);
             setMediaSource(null);
             setLocationError(false);
-            setBarangayOverrideConfirmed(
-                false
-            );
+            setBarangayOverrideConfirmed(false);
         } finally {
             setLoading(false);
         }
@@ -1439,16 +1430,17 @@ export default function ReportScreen() {
 
                         <TextInput
                             value={description}
-                            onChangeText={
-                                setDescription
-                            }
+                            onChangeText={setDescription}
                             placeholder="Describe what happened..."
                             multiline
+                            maxLength={200}
                             textAlignVertical="top"
-                            style={
-                                styles.descriptionInput
-                            }
+                            style={styles.descriptionInput}
                         />
+
+                        <Text style={styles.characterCount}>
+                            {description.length}/200
+                        </Text>
                     </View>
 
                     {/* SUBMIT */}
@@ -1898,5 +1890,11 @@ const styles = StyleSheet.create({
 
     saveGallerySubtitleDisabled: {
         color: "#AAAAAA",
+    },
+    characterCount: {
+        fontSize: 12,
+        color: "#888888",
+        textAlign: "right",
+        marginTop: 6,
     },
 });
