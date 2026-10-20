@@ -68,14 +68,6 @@ export default function ProfileScreen() {
                         <Text style={styles.name}>
                             {user.first_name} {user.last_name}
                         </Text>
-
-                        <Text style={styles.username}>
-                            @{user.username}
-                        </Text>
-
-                        <Text style={styles.email}>
-                            {user.email}
-                        </Text>
                     </View>
                 </View>
 
@@ -120,7 +112,7 @@ export default function ProfileScreen() {
                     <ProfileInfoRow
                         icon="at-outline"
                         label="Username"
-                        value={`@${user.username}`}
+                        value={`${user.username}`}
                     />
 
                     <ProfileInfoRow

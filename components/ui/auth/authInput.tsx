@@ -27,16 +27,18 @@ export default function AuthInput({
         <View style={styles.container}>
             <View style={styles.inputContainer}>
                 <TextInput
+                    {...props}
                     style={[
                         styles.input,
                         error && styles.inputError,
                         style,
                     ]}
                     placeholderTextColor="#8A8A8A"
+                    autoCapitalize="none"
                     secureTextEntry={
                         isPassword && !showPassword
                     }
-                    {...props}
+                    
                 />
 
                 {isPassword && (

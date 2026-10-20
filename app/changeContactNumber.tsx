@@ -57,21 +57,9 @@ export default function ChangeContactNumberScreen() {
                 contact_number: data.contact_number,
             });
 
-            if (user) {
-                updateUser({
-                    ...user,
-                    contact_number: data.contact_number,
-                });
-            }
-
-            // Refresh notifications after the account change succeeds.
-            await queryClient.invalidateQueries({
-                queryKey: ["notifications"],
-            });
-
             Alert.alert(
-                "Contact Number Updated",
-                "Your contact number has been updated successfully.",
+                "Verification Email Sent",
+                "A verification link has been sent to your email address. Your contact number will only change after you verify it.",
                 [
                     {
                         text: "OK",
@@ -96,7 +84,7 @@ export default function ChangeContactNumberScreen() {
 
             if (!backendErrors?.contact_number) {
                 setChangeContactNumberError(
-                    "Failed to change your contact number. Please try again."
+                    "Failed to request a contact number change. Please try again."
                 );
             }
         } finally {
@@ -177,7 +165,7 @@ export default function ChangeContactNumberScreen() {
 
                         <View style={styles.buttonContainer}>
                             <AuthButton
-                                title="Save Changes"
+                                title="Save changes and verify"
                                 loading={loading}
                                 onPress={handleSubmit(
                                     handleChangeContactNumber

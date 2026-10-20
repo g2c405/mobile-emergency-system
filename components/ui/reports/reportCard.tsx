@@ -12,20 +12,34 @@ import StatusBadge from "./statusBadge";
 
 interface ReportCardProps {
     id: number;
-    description: string;
+    category: string | null;
     barangay: string;
     status: ReportStatus;
     created_at: string;
+    ongoing_at?: string | null;
+    resolved_at?: string | null;
     image_url?: string | null;
     video_thumbnail_url?: string | null;
 }
 
+const CATEGORY_LABELS: Record<string, string> = {
+    road_accident: "Road Accident",
+    fire: "Fire",
+    natural_hazard: "Flooding and Natural Hazards",
+    medical_emergency: "Medical Emergency",
+    infrastructure_hazard: "Infrastructure Hazard",
+    public_safety: "Public Safety Incident",
+    other: "Other",
+};
+
 export default function ReportCard({
     id,
-    description,
+    category,
     barangay,
     status,
     created_at,
+    ongoing_at,
+    resolved_at,
     image_url,
     video_thumbnail_url,
 }: ReportCardProps) {
@@ -33,20 +47,41 @@ export default function ReportCard({
         router.push(`/report/${id}`);
     }
 
-    const formattedDate = new Date(
-        created_at
-    ).toLocaleDateString("en-US", {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-    });
+    const categoryLabel = category
+        ? CATEGORY_LABELS[category] ??
+          category
+              .replace(/_/g, " ")
+              .replace(/\b\w/g, (char) => char.toUpperCase())
+        : "Uncategorized";
 
-    const formattedTime = new Date(
-        created_at
-    ).toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-    });
+    function formatDateTime(value: string) {
+        const date = new Date(value);
+
+        if (Number.isNaN(date.getTime())) {
+            return null;
+        }
+
+        const formattedDate = date.toLocaleDateString("en-US", {
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+        });
+
+        const formattedTime = date.toLocaleTimeString("en-US", {
+            hour: "numeric",
+            minute: "2-digit",
+        });
+
+        return `${formattedDate}, ${formattedTime}`;
+    }
+
+    const formattedDate = formatDateTime(created_at);
+    const formattedOngoingDate = ongoing_at
+        ? formatDateTime(ongoing_at)
+        : null;
+    const formattedResolvedDate = resolved_at
+        ? formatDateTime(resolved_at)
+        : null;
 
     return (
         <Pressable
@@ -56,19 +91,17 @@ export default function ReportCard({
                 pressed && styles.cardPressed,
             ]}
         >
-            {image_url ? (
+            {image_url?.trim() ? (
                 <Image
                     style={styles.media}
                     source={{ uri: image_url }}
                     contentFit="cover"
                 />
-            ) : video_thumbnail_url ? (
+            ) : video_thumbnail_url?.trim() ? (
                 <View style={styles.mediaContainer}>
                     <Image
                         style={styles.media}
-                        source={{
-                            uri: video_thumbnail_url,
-                        }}
+                        source={{ uri: video_thumbnail_url }}
                         contentFit="cover"
                     />
 
@@ -82,16 +115,28 @@ export default function ReportCard({
                         </View>
                     </View>
                 </View>
-            ) : null}
+            ) : (
+                <View style={styles.noMediaContainer}>
+                    <Ionicons
+                        name="image-outline"
+                        size={26}
+                        color="#999999"
+                    />
+
+                    <Text style={styles.noMediaText}>
+                        No media uploaded
+                    </Text>
+                </View>
+            )}
 
             <View style={styles.content}>
                 <View style={styles.topRow}>
                     <Text
-                        style={styles.description}
+                        style={styles.category}
                         numberOfLines={2}
                         ellipsizeMode="tail"
                     >
-                        {description}
+                        {categoryLabel}
                     </Text>
 
                     <StatusBadge status={status} />
@@ -118,17 +163,47 @@ export default function ReportCard({
                     </Text>
                 </View>
 
-                <View style={styles.dateRow}>
-                    <Ionicons
-                        name="time-outline"
-                        size={15}
-                        color="#888888"
-                    />
+                {formattedDate && (
+                    <View style={styles.dateRow}>
+                        <Ionicons
+                            name="time-outline"
+                            size={15}
+                            color="#888888"
+                        />
 
-                    <Text style={styles.date}>
-                        {formattedDate}, {formattedTime}
-                    </Text>
-                </View>
+                        <Text style={styles.date}>
+                            {formattedDate}
+                        </Text>
+                    </View>
+                )}
+
+                {formattedOngoingDate && (
+                    <View style={styles.dateRow}>
+                        <Ionicons
+                            name="construct-outline"
+                            size={15}
+                            color="#888888"
+                        />
+
+                        <Text style={styles.date}>
+                            Ongoing: {formattedOngoingDate}
+                        </Text>
+                    </View>
+                )}
+
+                {status === "resolved" && formattedResolvedDate && (
+                    <View style={styles.dateRow}>
+                        <Ionicons
+                            name="checkmark-circle-outline"
+                            size={15}
+                            color="#888888"
+                        />
+
+                        <Text style={styles.date}>
+                            Resolved: {formattedResolvedDate}
+                        </Text>
+                    </View>
+                )}
             </View>
         </Pressable>
     );
@@ -142,7 +217,6 @@ const styles = StyleSheet.create({
         overflow: "hidden",
         borderWidth: 1,
         borderColor: "#E5E5E5",
-
         shadowColor: "#000",
         shadowOffset: {
             width: 0,
@@ -150,9 +224,7 @@ const styles = StyleSheet.create({
         },
         shadowOpacity: 0.08,
         shadowRadius: 5,
-
         elevation: 2,
-
         flexDirection: "row",
         padding: 12,
     },
@@ -203,7 +275,7 @@ const styles = StyleSheet.create({
         gap: 6,
     },
 
-    description: {
+    category: {
         flex: 1,
         fontSize: 16,
         lineHeight: 21,
@@ -235,5 +307,22 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 12,
         color: "#888888",
+    },
+
+    noMediaContainer: {
+        width: 90,
+        height: 90,
+        borderRadius: 10,
+        backgroundColor: "#EAEAEA",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 4,
+        gap: 4,
+    },
+
+    noMediaText: {
+        fontSize: 9,
+        color: "#888888",
+        textAlign: "center",
     },
 });

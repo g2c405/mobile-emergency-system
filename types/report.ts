@@ -5,20 +5,24 @@ export interface Report{
     longitude: number,
     barangay: string,
     city: string,
+    category: string | null,
     description: string,
     media: string,
     image_url: string | null;
     media_thumbnail: string | null;
     video_thumbnail_url: string | null,
     status: ReportStatus,
-    created_at: string
+    created_at: string,
+    ongoing_at: string | null,
+    resolved_at: string | null;
 
 }
 
 export interface ReportRequest{
     latitude: number,
     longitude: number,
-    barangay: string
+    barangay: string,
+    category: string | null,
     description: string,
 
 }

@@ -2,8 +2,15 @@ import NotificationCard from "@/components/ui/notifications/temp";
 import { getNotifications, markAsRead } from "@/services/notificationService";
 import { Notification } from "@/types/notification";
 import { Ionicons } from "@expo/vector-icons";
-import { useQuery, useQueryClient, } from "@tanstack/react-query";
-import { router } from "expo-router";
+import {
+    useQuery,
+    useQueryClient,
+} from "@tanstack/react-query";
+import {
+    router,
+    useFocusEffect,
+} from "expo-router";
+import { useCallback } from "react";
 import {
     ActivityIndicator,
     FlatList,
@@ -18,12 +25,19 @@ export default function NotificationsScreen() {
         data: notifications = [],
         isLoading,
         isError,
+        isRefetching,
         refetch,
     } = useQuery({
         queryKey: ["notifications"],
         queryFn: getNotifications,
     });
 
+useFocusEffect(
+    useCallback(() => {
+        refetch();
+    }, [refetch])
+);
+    
     console.log(
         "NOTIFICATIONS QUERY DATA:",
         notifications
@@ -57,9 +71,13 @@ export default function NotificationsScreen() {
         switch (notification.notification_type) {
             case "report_update":
                 if (notification.report) {
-                    router.push(
-                        `/report/${notification.report}`
-                    );
+                    router.push({
+                        pathname: "/report/[id]",
+                        params: {
+                            id: notification.report.toString(),
+                            source: "notifications",
+                        },
+                    });
                 }
                 break;
 
@@ -125,6 +143,7 @@ export default function NotificationsScreen() {
                     data={notifications}
                     keyExtractor={(item) =>
                         item.id.toString()
+                    
                     }
                     renderItem={({ item }) => (
                         <NotificationCard
@@ -141,7 +160,7 @@ export default function NotificationsScreen() {
                     }
                     showsVerticalScrollIndicator={false}
                     onRefresh={refetch}
-                    refreshing={false}
+                    refreshing={isRefetching}
                     ListEmptyComponent={
                         <View
                             style={styles.emptyContainer}
@@ -165,8 +184,10 @@ export default function NotificationsScreen() {
                             </Text>
                         </View>
                     }
+                    
                 />
             </View>
+        
         </SafeAreaView>
     );
 }

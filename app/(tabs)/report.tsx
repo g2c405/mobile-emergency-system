@@ -1,4 +1,8 @@
 import BarangaySelectModal from "@/components/ui/generic/barangaySelect";
+import CategorySelectModal, {
+    INCIDENT_CATEGORIES,
+    type IncidentCategory,
+} from "@/components/ui/generic/categorySelect";
 import getCurrentLocation from "@/services/locationService";
 import {
     createReport,
@@ -106,6 +110,12 @@ export default function ReportScreen() {
 
     const [barangay, setBarangay] =
         useState<string | null>(null);
+
+    const [category, setCategory] =
+    useState<IncidentCategory | null>(null);
+
+    const [categoryVisible, setCategoryVisible] =
+    useState(false);
 
     const [suggestedBarangay, setSuggestedBarangay] =
         useState<string | null>(null);
@@ -228,6 +238,8 @@ export default function ReportScreen() {
         setBarangayVisible(false);
         setBarangayOverrideConfirmed(false);
         setRecordingDuration(0);
+        setCategory(null);
+        setCategoryVisible(false);
 
         await new Promise((resolve) =>
             setTimeout(resolve, 300)
@@ -560,6 +572,14 @@ export default function ReportScreen() {
             return;
         }
 
+        if (!category) {
+            Alert.alert(
+                "Category required",
+                "Please select an incident category."
+            );
+            return;
+        }
+
         if (!description.trim()) {
             Alert.alert(
                 "Missing description",
@@ -577,6 +597,7 @@ export default function ReportScreen() {
                 latitude: location.latitude,
                 longitude: location.longitude,
                 barangay,
+                category,
                 description: description.trim(),
             });
 
@@ -1239,7 +1260,7 @@ export default function ReportScreen() {
                         <Pressable
                             style={styles.locationButton}
                             onPress={handleGetLocation}
-                            disabled={locationLoading}
+                            disabled={loading || locationLoading}
                         >
                             {/* LEFT ICON */}
                             {locationLoading ? (
@@ -1349,6 +1370,7 @@ export default function ReportScreen() {
                                 )
                             }
                             disabled={
+                                loading ||
                                 !location ||
                                 locationLoading
                             }
@@ -1416,6 +1438,52 @@ export default function ReportScreen() {
                         </Pressable>
                     </View>
 
+                    {/* INCIDENT CATEGORY */}
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>
+                            Incident Category
+                        </Text>
+
+                        <Pressable
+                            style={styles.categorySelector}
+                            onPress={() => setCategoryVisible(true)}
+                            disabled={loading}
+                        >
+                            <View style={styles.categoryContent}>
+                                <Ionicons
+                                    name="grid-outline"
+                                    size={21}
+                                    color={category ? "#C62828" : "#777777"}
+                                />
+
+                                <View style={styles.categoryTextContainer}>
+                                    <Text
+                                        style={[
+                                            styles.categoryText,
+                                            !category && styles.categoryPlaceholder,
+                                        ]}
+                                    >
+                                        {category
+                                            ? INCIDENT_CATEGORIES.find(
+                                                (item) => item.value === category
+                                            )?.label
+                                            : "Select incident category"}
+                                    </Text>
+
+                                    <Text style={styles.categorySubtitle}>
+                                        Choose the category that best describes the incident
+                                    </Text>
+                                </View>
+                            </View>
+
+                            <Ionicons
+                                name="chevron-forward"
+                                size={20}
+                                color="#888888"
+                            />
+                        </Pressable>
+                    </View>
+
                     {/* DESCRIPTION */}
                     <View
                         style={styles.section}
@@ -1435,7 +1503,10 @@ export default function ReportScreen() {
                             multiline
                             maxLength={200}
                             textAlignVertical="top"
-                            style={styles.descriptionInput}
+                            autoCapitalize="sentences"
+                            autoCorrect={false}
+                            editable={!loading}
+                            style={[styles.descriptionInput, loading && { opacity: 0.7 },]}
                         />
 
                         <Text style={styles.characterCount}>
@@ -1491,6 +1562,12 @@ export default function ReportScreen() {
                                 false
                             )
                         }
+                    />
+                    <CategorySelectModal
+                        visible={categoryVisible}
+                        value={category}
+                        onSelect={setCategory}
+                        onClose={() => setCategoryVisible(false)}
                     />
                 </ScrollView>
             </KeyboardAvoidingView>
@@ -1896,5 +1973,46 @@ const styles = StyleSheet.create({
         color: "#888888",
         textAlign: "right",
         marginTop: 6,
+    },
+    categorySelector: {
+        minHeight: 70,
+        borderWidth: 1,
+        borderColor: "#DDDDDD",
+        borderRadius: 14,
+        backgroundColor: "#FFFFFF",
+        paddingHorizontal: 14,
+        paddingVertical: 12,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+    },
+
+    categoryContent: {
+        flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+    },
+
+    categoryTextContainer: {
+        flex: 1,
+    },
+
+    categoryText: {
+        fontSize: 15,
+        fontWeight: "600",
+        color: "#333333",
+    },
+
+    categoryPlaceholder: {
+        color: "#888888",
+        fontWeight: "500",
+    },
+
+    categorySubtitle: {
+        fontSize: 12,
+        color: "#888888",
+        marginTop: 4,
+        lineHeight: 17,
     },
 });

@@ -4,7 +4,8 @@ import { getReports } from "@/services/reportService";
 import { ReportStatus } from "@/types/report";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useMemo, useState } from "react";
 import {
     ActivityIndicator,
     FlatList,
@@ -23,7 +24,11 @@ export default function HomeScreen() {
         isRefetching,
         refetch,
     } = useQuery({queryKey: ['reports'], queryFn: getReports});
-
+    useFocusEffect(
+        useCallback(() => {
+            refetch();
+        }, [refetch])
+    );
     const [sortOrder, setSortOrder] = useState<
         "newest" | "oldest"
     >("newest");
@@ -136,62 +141,62 @@ export default function HomeScreen() {
                     onBarangayChange={setSelectedBarangay}
                 />
             </View>
-            <FlatList
-                data={filteredReports}
-                keyExtractor={(item) =>
-                    item.id.toString()
-                }
-                renderItem={({ item }) => (
-                    <ReportCard
-                        id={item.id}
-                        description={item.description}
-                        barangay={item.barangay}
-                        status={item.status}
-                        created_at={item.created_at}
-                        image_url={item.image_url}
-                        video_thumbnail_url={
-                            item.video_thumbnail_url
-                        }
-                    />
-                )}
-                ListEmptyComponent={
-                    reports.length === 0 ? (
-                        <View style={styles.emptyContainer}>
-                            <Ionicons
-                                name="document-text-outline"
-                                size={48}
-                                color="#AAAAAA"
-                            />
-
-                            <Text style={styles.emptyTitle}>
-                                No reports yet
-                            </Text>
-
-                            <Text style={styles.emptyText}>
-                                You haven't submitted any reports yet.
-                            </Text>
-                        </View>
-                    ) : (
-                        <View style={styles.emptyContainer}>
-                            <Ionicons
-                                name="filter-outline"
-                                size={48}
-                                color="#AAAAAA"
-                            />
-
-                            <Text style={styles.emptyTitle}>
-                                No results
-                            </Text>
-
-                            <Text style={styles.emptyText}>
-                                No reports match your current filters.
-                            </Text>
-                        </View>
-                    )
-                }
-                onRefresh={refetch}
-                refreshing={isRefetching}
-            />
+        <FlatList
+            data={filteredReports}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
+                <ReportCard
+                    id={item.id}
+                    category={item.category}
+                    barangay={item.barangay}
+                    status={item.status}
+                    created_at={item.created_at}
+                    ongoing_at={
+                        item.ongoing_at ? item.ongoing_at : null
+                    }
+                    resolved_at={
+                        item.status === "resolved"
+                            ? item.resolved_at
+                            : null
+                    }
+                    image_url={item.image_url}
+                    video_thumbnail_url={item.video_thumbnail_url}
+                />
+            )}
+            ListEmptyComponent={
+                reports.length === 0 ? (
+                    <View style={styles.emptyContainer}>
+                        <Ionicons
+                            name="document-text-outline"
+                            size={48}
+                            color="#AAAAAA"
+                        />
+                        <Text style={styles.emptyTitle}>
+                            No reports yet
+                        </Text>
+                        <Text style={styles.emptyText}>
+                            You haven't submitted any reports yet.
+                        </Text>
+                    </View>
+                ) : (
+                    <View style={styles.emptyContainer}>
+                        <Ionicons
+                            name="filter-outline"
+                            size={48}
+                            color="#AAAAAA"
+                        />
+                        <Text style={styles.emptyTitle}>
+                            No results
+                        </Text>
+                        <Text style={styles.emptyText}>
+                            No reports match your current filters.
+                        </Text>
+                    </View>
+                )
+            }
+            onRefresh={refetch}
+            refreshing={isRefetching}
+        />
         </SafeAreaView>
     );
 }
