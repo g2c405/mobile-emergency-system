@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "354069774975",
+    "project_id": "aksyon-50131",
+    "storage_bucket": "aksyon-50131.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:354069774975:android:4b7ae7ca2bef796364754a",
+        "android_client_info": {
+          "package_name": "com.speon0123.mobileaccidentreportapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBFKHut8kXElqiV_bcLZCyWR54GTdmXqC0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

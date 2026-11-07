@@ -1,3 +1,4 @@
+import { handleAuthenticationFailure } from "@/contexts/authContext";
 import NetInfo from "@react-native-community/netinfo";
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
@@ -26,4 +27,20 @@ api.interceptors.request.use(async (config) => {
 
     return config;
 });
+
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        const status = error.response?.status;
+        const url = error.config?.url ?? "";
+
+        const isLoginRequest = url.includes("users/login/");
+
+        if (status === 401 && !isLoginRequest) {
+            handleAuthenticationFailure();
+        }
+
+        return Promise.reject(error);
+    }
+);
 export default api;

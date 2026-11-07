@@ -13,7 +13,6 @@ import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
 import {
-    Alert,
     Image,
     KeyboardAvoidingView,
     Platform,
@@ -21,7 +20,7 @@ import {
     ScrollView,
     StyleSheet,
     Text,
-    View,
+    View
 } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -48,37 +47,25 @@ export default function RegisterScreen() {
     const password = watch("password", "");
 
     async function handleRegister(data: RegisterFormData) {
-        // Guard against registration without legal agreement.
-        if (!agreedToLegal || loading) {
-            return;
-        }
+        if (!agreedToLegal || loading) return;
 
         try {
             const { confirm_password, ...registerData } = data;
 
-            await register(registerData);
+            const response = await register(registerData);
 
-            Alert.alert(
-                "Registration Successful",
-                "A verification email has been sent to your email address. Please check your inbox and verify your account before logging in.",
-                [
-                    {
-                        text: "OK",
-                        onPress: () => router.back(),
-                    },
-                ]
-            );
+            router.replace({
+                pathname: "/(auth)/verifyEmail",
+                params: {
+                    userId: String(response.id),
+                    email: registerData.email,
+                },
+            });
+
         } catch (error: any) {
             handleApiError(error);
-
-            console.error(
-                "STATUS:",
-                error.response?.status
-            );
-            console.error(
-                "DATA:",
-                error.response?.data
-            );
+            console.error("STATUS:", error.response?.status);
+            console.error("DATA:", error.response?.data);
             console.error("MESSAGE:", error.message);
         }
     }

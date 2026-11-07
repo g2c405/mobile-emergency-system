@@ -10,14 +10,13 @@ import {
     useForm,
 } from "react-hook-form";
 import {
-    Alert,
     KeyboardAvoidingView,
     Platform,
     Pressable,
     ScrollView,
     StyleSheet,
     Text,
-    View,
+    View
 } from "react-native";
 import {
     SafeAreaView,
@@ -53,16 +52,12 @@ export default function ChangeEmailScreen() {
                 new_email: data.new_email,
             });
 
-            Alert.alert(
-                "Verification Email Sent",
-                "A verification link has been sent to your new email address. Your email address will only change after you verify it.",
-                [
-                    {
-                        text: "OK",
-                        onPress: () => router.back(),
-                    },
-                ]
-            );
+            router.replace({
+                pathname: "/verifyEmailChange", // Adjust route as needed.
+                params: {
+                    email: data.new_email,
+                },
+            });
         } catch (error: any) {
             console.error(
                 "CHANGE EMAIL ERROR:",
@@ -132,12 +127,8 @@ export default function ChangeEmailScreen() {
                                 Change Email
                             </Text>
 
-                            <Text
-                                style={styles.subtitle}
-                            >
-                                Enter your new email
-                                address. A verification
-                                link will be sent to it.
+                           <Text style={styles.subtitle}>
+                                Enter your new email address. A verification code will be sent to it.
                             </Text>
                         </View>
 

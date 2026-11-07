@@ -3,6 +3,7 @@ import CategorySelectModal, {
     INCIDENT_CATEGORIES,
     type IncidentCategory,
 } from "@/components/ui/generic/categorySelect";
+import { containsInappropriateWord } from "@/constants/inappropriateWords";
 import getCurrentLocation from "@/services/locationService";
 import {
     createReport,
@@ -85,6 +86,9 @@ export default function ReportScreen() {
 
     const [description, setDescription] =
         useState("");
+    
+    const hasInappropriateWord = containsInappropriateWord(description);
+
 
     const [mediaUri, setMediaUri] =
         useState<string | null>(null);
@@ -253,8 +257,8 @@ export default function ReportScreen() {
         setLocationError(false);
 
         try {
-            const result =
-                await getCurrentLocation();
+            // Step 1: Get GPS coordinates
+            const result = await getCurrentLocation();
 
             const newLocation = {
                 latitude: result.latitude,
@@ -263,52 +267,42 @@ export default function ReportScreen() {
 
             setLocation(newLocation);
 
-            console.log(
-                "LOCATION SUCCESS:",
-                newLocation
-            );
+            console.log("LOCATION SUCCESS:", newLocation);
 
-            const nearest =
-                await getNearestBarangay(
+            // Step 2: Determine nearest barangay
+            try {
+                const nearest = await getNearestBarangay(
                     newLocation.latitude,
                     newLocation.longitude
                 );
 
-            console.log(
-                "BARANGAY SUCCESS:",
-                nearest
-            );
+                console.log("BARANGAY SUCCESS:", nearest);
 
-            setSuggestedBarangay(
-                nearest.barangay
-            );
+                setSuggestedBarangay(nearest.barangay);
+                setSuggestedDistance(nearest.distance_km);
+                setBarangay(nearest.barangay);
 
-            setSuggestedDistance(
-                nearest.distance_km
-            );
+                setBarangayOverrideConfirmed(false);
 
-            setBarangay(
-                nearest.barangay
-            );
+            } catch (error) {
+                console.error("BARANGAY ERROR:", error);
 
-            // A new location means the user is receiving
-            // a new suggested barangay, so the previous
-            // override confirmation no longer applies.
-            setBarangayOverrideConfirmed(
-                false
-            );
-        } catch (error: any) {
-            console.error(
-                "LOCATION ERROR:",
-                error
-            );
+                Alert.alert(
+                    "Barangay detection failed",
+                    "Your location was retrieved, but we couldn't determine your nearest barangay. Please try again."
+                );
+            }
+
+        } catch (error) {
+            console.error("GPS ERROR:", error);
 
             setLocationError(true);
 
             Alert.alert(
                 "Location unavailable",
-                "Unable to get your current location or determine the nearest barangay."
+                "Unable to retrieve your current location. Please check your location permissions and GPS settings."
             );
+
         } finally {
             setLocationLoading(false);
         }
@@ -537,6 +531,14 @@ export default function ReportScreen() {
     }
 
     function handleSubmit() {
+        if (containsInappropriateWord(description)) {
+            Alert.alert(
+                "Inappropriate Language",
+                "Please remove inappropriate language from your description before submitting."
+            );
+            return;
+        }
+
         Alert.alert(
             "Submit Report?",
             "Are you sure you want to submit this report?",
@@ -942,6 +944,7 @@ export default function ReportScreen() {
                                 }
                             }}
                             disabled={
+                                loading ||
                                 recording ||
                                 mediaProcessing
                             }
@@ -986,6 +989,7 @@ export default function ReportScreen() {
                                 }
                             }}
                             disabled={
+                                loading ||
                                 recording ||
                                 mediaProcessing
                             }
@@ -1129,6 +1133,10 @@ export default function ReportScreen() {
                                             null
                                         );
                                     }}
+                                    disabled={
+                                        loading ||
+                                        mediaProcessing
+                                    }
                                 >
                                     <Text
                                         style={
@@ -1237,8 +1245,9 @@ export default function ReportScreen() {
                                         setSaveToGallery
                                     }
                                     disabled={
-                                        mediaSource ===
-                                        "gallery"
+                                        loading ||
+                                        mediaProcessing ||
+                                        mediaSource === "gallery"
                                     }
                                 />
                             </View>
@@ -1484,15 +1493,10 @@ export default function ReportScreen() {
                         </Pressable>
                     </View>
 
+                    
                     {/* DESCRIPTION */}
-                    <View
-                        style={styles.section}
-                    >
-                        <Text
-                            style={
-                                styles.sectionTitle
-                            }
-                        >
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>
                             Description
                         </Text>
 
@@ -1506,13 +1510,26 @@ export default function ReportScreen() {
                             autoCapitalize="sentences"
                             autoCorrect={false}
                             editable={!loading}
-                            style={[styles.descriptionInput, loading && { opacity: 0.7 },]}
+                            style={[
+                                styles.descriptionInput,
+                                hasInappropriateWord &&
+                                    styles.descriptionInputError,
+                                loading && { opacity: 0.7 },
+                            ]}
                         />
+
+                        {hasInappropriateWord && (
+                            <Text style={styles.descriptionError}>
+                                Please remove inappropriate language
+                                from your description.
+                            </Text>
+                        )}
 
                         <Text style={styles.characterCount}>
                             {description.length}/200
                         </Text>
                     </View>
+
 
                     {/* SUBMIT */}
                     <Pressable
@@ -2014,5 +2031,14 @@ const styles = StyleSheet.create({
         color: "#888888",
         marginTop: 4,
         lineHeight: 17,
+    },
+    descriptionInputError: {
+        borderColor: "#C62828",
+    },
+
+    descriptionError: {
+        color: "#C62828",
+        fontSize: 12,
+        marginTop: 6,
     },
 });

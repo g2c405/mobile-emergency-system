@@ -18,6 +18,7 @@ interface ReportCardProps {
     created_at: string;
     ongoing_at?: string | null;
     resolved_at?: string | null;
+    dismissed_at?: string | null;
     image_url?: string | null;
     video_thumbnail_url?: string | null;
 }
@@ -40,6 +41,7 @@ export default function ReportCard({
     created_at,
     ongoing_at,
     resolved_at,
+    dismissed_at,
     image_url,
     video_thumbnail_url,
 }: ReportCardProps) {
@@ -81,6 +83,9 @@ export default function ReportCard({
         : null;
     const formattedResolvedDate = resolved_at
         ? formatDateTime(resolved_at)
+        : null;
+    const formattedDismissedDate = dismissed_at
+        ? formatDateTime(dismissed_at)
         : null;
 
     return (
@@ -201,6 +206,20 @@ export default function ReportCard({
 
                         <Text style={styles.date}>
                             Resolved: {formattedResolvedDate}
+                        </Text>
+                    </View>
+                )}
+
+                {status === "dismissed" && formattedDismissedDate && (
+                    <View style={styles.dateRow}>
+                        <Ionicons
+                            name="close-circle-outline"
+                            size={15}
+                            color="#888888"
+                        />
+
+                        <Text style={styles.date}>
+                            Dismissed: {formattedDismissedDate}
                         </Text>
                     </View>
                 )}

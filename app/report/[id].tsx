@@ -18,6 +18,7 @@ import {
     VideoView,
     useVideoPlayer,
 } from "expo-video";
+import { useCallback, useEffect, useState } from "react";
 import {
     ActivityIndicator,
     Image,
@@ -39,10 +40,34 @@ const CATEGORY_LABELS: Record<string, string> = {
     other: "Other",
 };
 
-function ReportVideo({ uri }: { uri: string }) {
+const DISMISSAL_REASON_LABELS: Record<string, string> = {
+    profanity: "Profanity in Description",
+    profanity_in_description: "Profanity in Description",
+    incorrect_barangay: "Incorrect Barangay Selected",
+    incorrect_barangay_selected: "Incorrect Barangay Selected",
+    inappropriate_media: "Inappropriate Media Evidence",
+    inappropriate_media_evidence: "Inappropriate Media Evidence",
+};
+
+function ReportVideo({
+    uri,
+    onPlayingChange,
+}: {
+    uri: string;
+    onPlayingChange: (isPlaying: boolean) => void;
+}) {
     const player = useVideoPlayer(uri, (player) => {
         player.loop = false;
     });
+
+    useEffect(() => {
+        const subscription = player.addListener(
+            "playingChange",
+            ({ isPlaying }) => onPlayingChange(isPlaying)
+        );
+
+        return () => subscription.remove();
+    }, [player, onPlayingChange]);
 
     return (
         <VideoView
@@ -62,6 +87,12 @@ export default function ReportDetailScreen() {
 
     const reportId = Number(id);
     const queryClient = useQueryClient();
+
+    const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+
+    const handleVideoPlayingChange = useCallback((isPlaying: boolean) => {
+        setIsVideoPlaying(isPlaying);
+    }, []);
 
     const {
         data: report,
@@ -119,6 +150,40 @@ export default function ReportDetailScreen() {
               .replace(/\b\w/g, (char) => char.toUpperCase())
         : "Uncategorized";
 
+    const dismissalReasonKey = report.dismissal_reason?.toLowerCase();
+    const dismissalReasonLabel = dismissalReasonKey
+        ? DISMISSAL_REASON_LABELS[dismissalReasonKey] ??
+          dismissalReasonKey
+              .replace(/_/g, " ")
+              .replace(/\b\w/g, (char) => char.toUpperCase())
+        : null;
+
+    function formatDateTime(value: string) {
+        const date = new Date(value);
+
+        if (Number.isNaN(date.getTime())) return null;
+
+        return date.toLocaleString("en-US", {
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+            second: "2-digit",
+        });
+    }
+
+    const submittedDate = formatDateTime(report.created_at);
+    const ongoingDate = report.ongoing_at
+        ? formatDateTime(report.ongoing_at)
+        : null;
+    const resolvedDate = report.resolved_at
+        ? formatDateTime(report.resolved_at)
+        : null;
+    const dismissedDate = report.dismissed_at
+        ? formatDateTime(report.dismissed_at)
+        : null;
+
     return (
         <SafeAreaView style={styles.safeArea}>
             <ScrollView
@@ -142,36 +207,26 @@ export default function ReportDetailScreen() {
                     </Pressable>
                 </View>
 
-                {/* Report information */}
+                {/* Report Information */}
                 <View style={styles.infoSection}>
-                    {/* Submitted */}
-                    <View style={styles.infoRow}>
-                        <Ionicons
-                            name="calendar-outline"
-                            size={20}
-                            color="#666666"
-                        />
-                        <View style={styles.infoContent}>
-                            <Text style={styles.infoLabel}>
-                                Submitted
-                            </Text>
-                            <Text style={styles.infoValue}>
-                                {new Date(report.created_at).toLocaleString(
-                                    "en-US",
-                                    {
-                                        month: "long",
-                                        day: "numeric",
-                                        year: "numeric",
-                                        hour: "numeric",
-                                        minute: "2-digit",
-                                        second: "2-digit",
-                                    }
-                                )}
-                            </Text>
-                        </View>
-                    </View>
+                    <Text style={styles.sectionTitle}>Report Information</Text>
 
-                    {/* Barangay */}
+                    {/* Submitted */}
+                    {submittedDate && (
+                        <View style={styles.infoRow}>
+                            <Ionicons
+                                name="calendar-outline"
+                                size={20}
+                                color="#666666"
+                            />
+                            <View style={styles.infoContent}>
+                                <Text style={styles.infoLabel}>Submitted</Text>
+                                <Text style={styles.infoValue}>{submittedDate}</Text>
+                            </View>
+                        </View>
+                    )}
+
+                    {/* Location */}
                     <View style={styles.infoRow}>
                         <Ionicons
                             name="location-outline"
@@ -179,11 +234,13 @@ export default function ReportDetailScreen() {
                             color="#666666"
                         />
                         <View style={styles.infoContent}>
-                            <Text style={styles.infoLabel}>
-                                Barangay
-                            </Text>
-                            <Text style={styles.infoValue}>
-                                {report.barangay}
+                            <Text style={styles.infoLabel}>Location</Text>
+                            <Text style={styles.infoValue}>{report.barangay}</Text>
+                            {report.city ? (
+                                <Text style={styles.secondaryValue}>{report.city}</Text>
+                            ) : null}
+                            <Text style={styles.secondaryValue}>
+                                {report.latitude}, {report.longitude}
                             </Text>
                         </View>
                     </View>
@@ -196,73 +253,32 @@ export default function ReportDetailScreen() {
                             color="#666666"
                         />
                         <View style={styles.infoContent}>
-                            <Text style={styles.infoLabel}>
-                                Category
-                            </Text>
-                            <Text style={styles.infoValue}>
-                                {categoryLabel}
-                            </Text>
+                            <Text style={styles.infoLabel}>Category</Text>
+                            <Text style={styles.infoValue}>{categoryLabel}</Text>
                         </View>
                     </View>
 
-                    
-
-                    {/* Ongoing */}
-                    {report.ongoing_at && (
-                        <View style={styles.infoRow}>
-                            <Ionicons
-                                name="time-outline"
-                                size={20}
-                                color="#666666"
-                            />
-                            <View style={styles.infoContent}>
-                                <Text style={styles.infoLabel}>
-                                    Ongoing
-                                </Text>
-                                <Text style={styles.infoValue}>
-                                    {new Date(
-                                        report.ongoing_at
-                                    ).toLocaleString("en-US", {
-                                        month: "long",
-                                        day: "numeric",
-                                        year: "numeric",
-                                        hour: "numeric",
-                                        minute: "2-digit",
-                                        second: "2-digit",
-                                    })}
-                                </Text>
-                            </View>
+                    {/* Description */}
+                    <View style={styles.infoRow}>
+                        <Ionicons
+                            name="document-text-outline"
+                            size={20}
+                            color="#666666"
+                        />
+                        <View style={styles.infoContent}>
+                            <Text style={styles.infoLabel}>Description</Text>
+                            <Text style={styles.descriptionValue}>
+                                {formatDescription(report.description?.trim()) ||
+                                    "No description provided."}
+                            </Text>
                         </View>
-                    )}
+                    </View>
+                </View>
 
-                    {/* Resolved */}
-                    {report.status === "resolved" &&
-                        report.resolved_at && (
-                            <View style={styles.infoRow}>
-                                <Ionicons
-                                    name="checkmark-circle-outline"
-                                    size={20}
-                                    color="#666666"
-                                />
-                                <View style={styles.infoContent}>
-                                    <Text style={styles.infoLabel}>
-                                        Resolved
-                                    </Text>
-                                    <Text style={styles.infoValue}>
-                                        {new Date(
-                                            report.resolved_at
-                                        ).toLocaleString("en-US", {
-                                            month: "long",
-                                            day: "numeric",
-                                            year: "numeric",
-                                            hour: "numeric",
-                                            minute: "2-digit",
-                                            second: "2-digit",
-                                        })}
-                                    </Text>
-                                </View>
-                            </View>
-                        )}
+                {/* Report Progress */}
+                <View style={styles.infoSection}>
+                    <Text style={styles.sectionTitle}>Report Progress</Text>
+
                     {/* Status */}
                     <View style={styles.infoRow}>
                         <Ionicons
@@ -271,39 +287,80 @@ export default function ReportDetailScreen() {
                             color="#666666"
                         />
                         <View style={styles.infoContent}>
-                            <Text style={styles.infoLabel}>
-                                Status
-                            </Text>
+                            <Text style={styles.infoLabel}>Status</Text>
                             <StatusBadge
                                 style={styles.badge}
                                 status={report.status}
                             />
                         </View>
                     </View>
-                </View>
-                
-                
-                {/* Description */}
-                <View style={styles.descriptionCard}>
-                    <View style={styles.infoRow}>
-                        <Ionicons
-                            name="document-text-outline"
-                            size={20}
-                            color="#666666"
-                        />
-                        <View style={styles.infoContent}>
-                            <Text style={styles.infoLabel}>
-                                Description
-                            </Text>
-                            <Text style={styles.descriptionValue}>
-                                {formatDescription(
-                                    report.description?.trim()
-                                ) || "No description provided."}
-                            </Text>
+
+                    {/* Ongoing */}
+                    {ongoingDate && (
+                        <View style={styles.infoRow}>
+                            <Ionicons
+                                name="time-outline"
+                                size={20}
+                                color="#666666"
+                            />
+                            <View style={styles.infoContent}>
+                                <Text style={styles.infoLabel}>Ongoing</Text>
+                                <Text style={styles.infoValue}>{ongoingDate}</Text>
+                            </View>
                         </View>
-                    </View>
+                    )}
+
+                    {/* Resolved */}
+                    {report.status === "resolved" && resolvedDate && (
+                        <View style={styles.infoRow}>
+                            <Ionicons
+                                name="checkmark-circle-outline"
+                                size={20}
+                                color="#666666"
+                            />
+                            <View style={styles.infoContent}>
+                                <Text style={styles.infoLabel}>Resolved</Text>
+                                <Text style={styles.infoValue}>{resolvedDate}</Text>
+                            </View>
+                        </View>
+                    )}
+
+                    {/* Dismissed */}
+                    {report.status === "dismissed" && dismissedDate && (
+                        <View style={styles.infoRow}>
+                            <Ionicons
+                                name="close-circle-outline"
+                                size={20}
+                                color="#666666"
+                            />
+                            <View style={styles.infoContent}>
+                                <Text style={styles.infoLabel}>Dismissed</Text>
+                                <Text style={styles.infoValue}>{dismissedDate}</Text>
+                            </View>
+                        </View>
+                    )}
                 </View>
 
+                {/* Dismissal Details */}
+                {report.status === "dismissed" && dismissalReasonLabel && (
+                    <View style={styles.dismissalCard}>
+                        <View style={styles.infoRow}>
+                            <Ionicons
+                                name="alert-circle-outline"
+                                size={20}
+                                color="#C62828"
+                            />
+                            <View style={styles.infoContent}>
+                                <Text style={styles.infoLabel}>
+                                    Reason for Dismissal
+                                </Text>
+                                <Text style={styles.infoValue}>
+                                    {dismissalReasonLabel}
+                                </Text>
+                            </View>
+                        </View>
+                    </View>
+                )}
 
                 {/* Media */}
                 <View style={styles.mediaSection}>
@@ -320,12 +377,14 @@ export default function ReportDetailScreen() {
 
                     {report.video_thumbnail_url ? (
                         <View style={styles.videoContainer}>
-                            <Image
-                                source={{
-                                    uri: report.video_thumbnail_url,
-                                }}
-                                style={styles.videoThumbnail}
-                            />
+                            {!isVideoPlaying && (
+                                <Image
+                                    source={{
+                                        uri: report.video_thumbnail_url,
+                                    }}
+                                    style={styles.videoThumbnail}
+                                />
+                            )}
 
                             {videoLoading && (
                                 <View style={styles.mediaState}>
@@ -355,6 +414,7 @@ export default function ReportDetailScreen() {
                             {videoData?.video_url && (
                                 <ReportVideo
                                     uri={videoData.video_url}
+                                    onPlayingChange={handleVideoPlayingChange}
                                 />
                             )}
                         </View>
@@ -416,7 +476,7 @@ const styles = StyleSheet.create({
         borderColor: "#E5E5E5",
         padding: 16,
         gap: 18,
-        marginBottom: 0,
+        marginBottom: 12,
     },
     infoRow: {
         flexDirection: "row",
@@ -437,15 +497,27 @@ const styles = StyleSheet.create({
         color: "#333333",
         fontWeight: "600",
     },
+    secondaryValue: {
+        fontSize: 13,
+        color: "#666666",
+        fontWeight: "400",
+        marginTop: 2,
+    },
     badge: {
         alignSelf: "flex-start",
     },
     mediaSection: {
+        backgroundColor: "#FFFFFF",
+        borderRadius: 14,
+        borderWidth: 1,
+        borderColor: "#E5E5E5",
+        padding: 16,
         gap: 12,
+        marginBottom: 12,
     },
     sectionTitle: {
-        fontSize: 18,
-        fontWeight: "700",
+        fontSize: 17,
+        fontWeight: "500",
         color: "#222222",
     },
     image: {
@@ -484,14 +556,14 @@ const styles = StyleSheet.create({
         width: "100%",
         height: "100%",
     },
-    descriptionCard: {
+    dismissalCard: {
         backgroundColor: "#FFFFFF",
         borderRadius: 14,
         borderWidth: 1,
         borderColor: "#E5E5E5",
         padding: 16,
         marginTop: 12,
-        marginBottom: 24,
+        marginBottom: 12,
     },
     descriptionValue: {
         fontSize: 15,

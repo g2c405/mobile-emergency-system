@@ -15,6 +15,10 @@ export interface RegisterRequest{
     residential_barangay: string
 }
 
+export interface RegisterResponse {
+    id: number;
+}
+
 export type RegisterFormData = RegisterRequest & {
     confirm_password: string;
 };
@@ -29,7 +33,7 @@ export interface AuthContextType{
     initializing: boolean;
     loading: boolean;
     login: (data: LoginRequest)=> Promise<void>;
-    register: (data: RegisterRequest)=> Promise<void>;
+    register: (data: RegisterRequest) => Promise<RegisterResponse>;
     logout: ()=> Promise<void>;
     updateUser: (user: User) => void;
 }
@@ -48,5 +52,5 @@ export interface ChangeEmailRequest {
 }
 
 export interface ChangeContactNumberRequest {
-    contact_number: string;
+    new_contact_number: string;
 }

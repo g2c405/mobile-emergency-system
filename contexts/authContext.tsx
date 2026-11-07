@@ -1,9 +1,25 @@
 import * as authService from "@/services/authService";
-import { AuthContextType, AuthProviderProps, LoginRequest, RegisterRequest } from "@/types/auth";
+import {
+    deactivatePushDevice,
+    registerDeviceForPushNotifications,
+} from "@/services/notificationService";
+import { AuthContextType, AuthProviderProps, LoginRequest, RegisterRequest, RegisterResponse } from "@/types/auth";
 import { User } from "@/types/user";
 import * as SecureStore from "expo-secure-store";
 import { createContext, useEffect, useState } from "react";
 export const AuthContext = createContext<AuthContextType | null>(null);
+
+let onAuthenticationFailure: (() => void) | null = null;
+
+export function setAuthenticationFailureHandler(
+    handler: (() => void) | null
+) {
+    onAuthenticationFailure = handler;
+}
+
+export function handleAuthenticationFailure() {
+    onAuthenticationFailure?.();
+}
 
 export function AuthProvider({children}: AuthProviderProps){
     const [user, setUser] = useState<User|null>(null);
@@ -27,12 +43,15 @@ export function AuthProvider({children}: AuthProviderProps){
         }
     }
 
-    async function register(data: RegisterRequest): Promise<void>{
+    async function register(
+        data: RegisterRequest
+    ): Promise<RegisterResponse> {
         setLoading(true);
-        try{
-            await authService.register(data);
+
+        try {
+            return await authService.register(data);
         }
-        finally{
+        finally {
             setLoading(false);
         }
     }
@@ -58,20 +77,58 @@ export function AuthProvider({children}: AuthProviderProps){
         }
 
     }
+
+    async function clearSession() {
+        await SecureStore.deleteItemAsync("token");
+        setToken(null);
+        setUser(null);
+    }
+
+    useEffect(() => {
+        setAuthenticationFailureHandler(() => {
+            void clearSession();
+        });
+
+        return () => {
+            setAuthenticationFailureHandler(null);
+        };
+    }, []);
+
     useEffect(()=>{
         void restoreSession();
     },[]);
 
-    async function logout(){
+    useEffect(() => {
+        if (initializing || !user || !token) {
+            return;
+        }
+
+        void registerDeviceForPushNotifications();
+
+    }, [initializing, user?.id, token]);
+
+   async function logout() {
         setLoading(true);
-        try{
-            await authService.logout();
-        }
-        catch(error){
-            console.error("Logout failed.", error)
-            
-        }
-        finally{
+
+        try {
+            // Deactivate this device's push token first.
+            try {
+                await deactivatePushDevice();
+            } catch (error) {
+                console.error(
+                    "Failed to deactivate push device:",
+                    error
+                );
+            }
+
+            // Perform your existing backend logout.
+            try {
+                await authService.logout();
+            } catch (error) {
+                console.error("Logout failed.", error);
+            }
+
+        } finally {
             await SecureStore.deleteItemAsync("token");
             setToken(null);
             setUser(null);

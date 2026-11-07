@@ -4,7 +4,8 @@ import {
     ChangePasswordRequest,
     LoginRequest,
     LoginResponse,
-    RegisterRequest
+    RegisterRequest,
+    RegisterResponse
 } from "@/types/auth";
 import { User } from "@/types/user";
 import api from "./api";
@@ -12,8 +13,15 @@ export async function login(data: LoginRequest): Promise<LoginResponse> {
     const response = await api.post<LoginResponse>("users/login/",data);
     return response.data;
 }
-export async function register(data: RegisterRequest): Promise<void> {
-    await api.post<void>("users/register/",data);
+export async function register(
+    data: RegisterRequest
+): Promise<RegisterResponse> {
+    const response = await api.post<RegisterResponse>(
+        "users/register/",
+        data
+    );
+
+    return response.data;
 }
 export async function logout(): Promise<void> {
     await api.post("users/logout/");
@@ -56,44 +64,45 @@ export async function changePassword(data: ChangePasswordRequest){
 
 export async function changeEmail(
     data: ChangeEmailRequest
-) {
-    const response = await api.post(
-        "users/change-email/",
-        data
-    );
+): Promise<void> {
+    await api.post("users/change-email/", data);
+}
 
-    return response.data;
+export async function verifyEmailChange(
+    code: string
+): Promise<void> {
+    await api.post("users/verify-email-change/", { code });
+}
+
+export async function resendEmailChangeOTP(): Promise<void> {
+    await api.post("users/resend-email-change-otp/");
 }
 
 export async function changeContactNumber(
     data: ChangeContactNumberRequest
-) {
-    console.log("CHANGE CONTACT NUMBER REQUEST:", data);
+): Promise<void> {
+    await api.post("users/change-contact-number/", data);
+}
 
-    try {
-        const response = await api.post(
-            "users/change-contact-number/",
-            data
-        );
+export async function verifyContactNumberChange(
+    code: string
+): Promise<void> {
+    await api.post("users/verify-contact-number-change/", { code });
+}
 
-        console.log(
-            "CHANGE CONTACT NUMBER RESPONSE:",
-            response.status,
-            response.data
-        );
+export async function resendContactNumberChangeOTP(): Promise<void> {
+    await api.post("users/resend-contact-number-change-otp/");
+}
 
-        return response.data;
-    } catch (error: any) {
-        console.log("CHANGE CONTACT NUMBER FAILED");
-        console.log("MESSAGE:", error.message);
-        console.log("CODE:", error.code);
-        console.log("URL:", error.config?.url);
-        console.log("BASE URL:", error.config?.baseURL);
-        console.log("FULL URL:", error.config?.baseURL + error.config?.url);
-        console.log("REQUEST DATA:", error.config?.data);
-        console.log("RESPONSE:", error.response);
-        console.log("REQUEST:", error.request);
+export async function verifyEmail(
+    userId: number,
+    code: string
+): Promise<void> {
+    await api.post(`users/verify-email/${userId}/`, { code });
+}
 
-        throw error;
-    }
+export async function resendRegistrationOTP(
+    userId: number
+): Promise<void> {
+    await api.post(`users/resend-registration-otp/${userId}/`);
 }

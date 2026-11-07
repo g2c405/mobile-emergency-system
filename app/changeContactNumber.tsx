@@ -12,14 +12,13 @@ import {
     useForm,
 } from "react-hook-form";
 import {
-    Alert,
     KeyboardAvoidingView,
     Platform,
     Pressable,
     ScrollView,
     StyleSheet,
     Text,
-    View,
+    View
 } from "react-native";
 import {
     SafeAreaView,
@@ -42,11 +41,11 @@ export default function ChangeContactNumberScreen() {
         formState: { errors },
     } = useForm<ChangeContactNumberForm>({
         defaultValues: {
-            contact_number: user?.contact_number ?? "",
+            new_contact_number: "",
         },
     });
 
-    async function handleChangeContactNumber(
+   async function handleChangeContactNumber(
         data: ChangeContactNumberForm
     ) {
         setLoading(true);
@@ -54,19 +53,15 @@ export default function ChangeContactNumberScreen() {
 
         try {
             await changeContactNumber({
-                contact_number: data.contact_number,
+                new_contact_number: data.new_contact_number,
             });
 
-            Alert.alert(
-                "Verification Email Sent",
-                "A verification link has been sent to your email address. Your contact number will only change after you verify it.",
-                [
-                    {
-                        text: "OK",
-                        onPress: () => router.back(),
-                    },
-                ]
-            );
+            router.replace({
+                pathname: "/verifyContactNumberChange",
+                params: {
+                    contactNumber: data.new_contact_number,
+                },
+            });
         } catch (error: any) {
             console.error(
                 "CHANGE CONTACT NUMBER ERROR:",
@@ -75,15 +70,14 @@ export default function ChangeContactNumberScreen() {
 
             const backendErrors = error.response?.data;
 
-            if (backendErrors?.contact_number) {
-                setError("contact_number", {
+            if (backendErrors?.new_contact_number) {
+                setError("new_contact_number", {
                     type: "server",
-                    message: backendErrors.contact_number[0],
+                    message: backendErrors.new_contact_number[0],
                 });
-            }
-
-            if (!backendErrors?.contact_number) {
+            } else {
                 setChangeContactNumberError(
+                    backendErrors?.detail ??
                     "Failed to request a contact number change. Please try again."
                 );
             }
@@ -122,17 +116,16 @@ export default function ChangeContactNumberScreen() {
                             </Text>
 
                             <Text style={styles.subtitle}>
-                                Enter your new contact number.
+                                Enter your new contact number. A verification code will be sent to your registered email address.
                             </Text>
                         </View>
 
                         <View style={styles.form}>
                             <Controller
                                 control={control}
-                                name="contact_number"
+                                name="new_contact_number"
                                 rules={{
-                                    required:
-                                        "Contact number is required.",
+                                    required: "Contact number is required.",
                                 }}
                                 render={({
                                     field: {
@@ -149,9 +142,7 @@ export default function ChangeContactNumberScreen() {
                                         keyboardType="phone-pad"
                                         autoCapitalize="none"
                                         autoCorrect={false}
-                                        error={
-                                            errors.contact_number?.message
-                                        }
+                                        error={errors.new_contact_number?.message}
                                     />
                                 )}
                             />

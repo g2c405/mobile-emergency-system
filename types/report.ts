@@ -15,6 +15,8 @@ export interface Report{
     created_at: string,
     ongoing_at: string | null,
     resolved_at: string | null;
+    dismissed_at: string | null;
+    dismissal_reason: string | null;
 
 }
 
@@ -39,7 +41,7 @@ export interface VideoUrlResponse {
 export type MediaType = "image" | "video";
 export type MediaRole = "media" | "thumbnail";
 
-export type ReportStatus =  | "pending" | "ongoing" | "resolved";
+export type ReportStatus =  | "pending" | "ongoing" | "resolved" | "dismissed";
 
 interface ReportFiltersProps {
     sortOrder: "newest" | "oldest";

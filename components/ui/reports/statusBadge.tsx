@@ -1,11 +1,13 @@
+
 import { ReportStatus } from "@/types/report";
 import { StyleProp, StyleSheet, Text, View, ViewStyle } from "react-native";
+
 interface statusBadgeProps {
     status: ReportStatus;
     style?: StyleProp<ViewStyle>;
 }
 
-export default function StatusBadge({status, style}:statusBadgeProps){
+export default function StatusBadge({ status, style }: statusBadgeProps) {
     const config = {
         pending: {
             label: "Pending",
@@ -22,11 +24,24 @@ export default function StatusBadge({status, style}:statusBadgeProps){
             backgroundColor: "#D4EDDA",
             textColor: "#155724",
         },
+        dismissed: {
+            label: "Dismissed",
+            backgroundColor: "#F8D7DA",
+            textColor: "#721C24",
+        },
     }[status];
 
-    return(
-        <View style={[styles.badge, {backgroundColor: config.backgroundColor}, style]}>
-            <Text style={[styles.text, {color: config.textColor}]}>{config.label}</Text>
+    return (
+        <View
+            style={[
+                styles.badge,
+                { backgroundColor: config.backgroundColor },
+                style,
+            ]}
+        >
+            <Text style={[styles.text, { color: config.textColor }]}>
+                {config.label}
+            </Text>
         </View>
     );
 }
